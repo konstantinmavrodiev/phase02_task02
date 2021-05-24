@@ -1,8 +1,44 @@
 version: "3.9"
 services:
-  wordpress:
-    # Here you put configuration of continer for wordpress that would use image that you build. Ports of webserver should be exposed to lacalhost
-    #...
   database:
     # Here you put configuration of continer for MySQL that would use any mysql image you like
     #...
+    image: mysql:5.7
+    container_name: db
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_DATABASE=wordpress
+    networks: 
+      - app-network
+
+  wordpress:
+    # Here you put configuration of container for wordpress that would use image that you build. Ports of webserver should be exposed to lacalhost
+    #...
+    depends_on: 
+      - database
+    image: MY_LATEST_IMAGE
+    ports:
+      - "80:80"
+    container_name: wordpress
+    restart: always
+    env_file: .env
+    environment: 
+      - WORDPRESS_DB_HOST=db:3306
+      - WORDPRESS_DB_USER=$MYSQL_USER
+      - WORDPRESS_DB_PASSWORD=$MYSQL_PASSWORD
+      - WORDPRESS_DB_NAME=wordpress
+    volumes: 
+      - wordpress:/var/www/app/wordpress
+    networks: 
+      - app-network
+
+volumes: 
+  - db_data: {}
+  - wordpress: {}
+
+networks:
+  app-network:
+    driver: bridge
